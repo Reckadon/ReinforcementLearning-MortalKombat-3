@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
+import time
 import diambra.arena
+
+fps = 20
 
 def main():
     # Environment creation
@@ -10,6 +13,7 @@ def main():
 
     # Agent-Environment interaction loop
     while True:
+        time.sleep(1/fps) # To slow down the execution for better visualization
         # (Optional) Environment rendering
         env.render()
 
