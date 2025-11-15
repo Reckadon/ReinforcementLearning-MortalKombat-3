@@ -48,7 +48,7 @@ diambra arena check-roms umk3.zip
 
 On first run, you'll need to register for a DIAMBRA account:
 
-1. Run the test script: `diambra run -r /home/[USERNAME]/.diambra/roms/ python trial.py` (You need docker running)
+1. Run the test script: `diambra run python trial.py` (You need docker running)
 2. When prompted to register, visit [diambra.ai](https://diambra.ai) (cli gives diambra.ai/register it wont work)
 3. Click "Login" (top right) and create an account
 4. Complete the registration process
