@@ -25,6 +25,7 @@ Create the DIAMBRA roms directory:
 ```bash
 mkdir -p /home/[USERNAME]/.diambra/roms/
 ```
+> You can use any other directory on your system as well, but then you need to set a system environment variable `DIAMBRAROMSPATH=/absolute/path/to/roms/folder/`
 
 Copy your UMK3 ROM file to the directory:
 
@@ -39,6 +40,7 @@ Check if the ROM is properly installed:
 ```bash
 diambra arena check-roms umk3.zip
 ```
+> If you are using a custom directory, and have set the environment varible correctly, this should run without errors as well. Try restarting the terminal if it doesn't.
 
 ✅ This command must pass successfully before proceeding. -_-
 
@@ -46,7 +48,7 @@ diambra arena check-roms umk3.zip
 
 On first run, you'll need to register for a DIAMBRA account:
 
-1. Run the test script: `diambra run -r /home/[USERNAME]/.diambra/roms/ python trial.py`
+1. Run the test script: `diambra run -r /home/[USERNAME]/.diambra/roms/ python trial.py` (You need docker running)
 2. When prompted to register, visit [diambra.ai](https://diambra.ai) (cli gives diambra.ai/register it wont work)
 3. Click "Login" (top right) and create an account
 4. Complete the registration process
@@ -58,6 +60,11 @@ Run the RL training script:
 ```bash
 diambra run -r /home/[USERNAME]/.diambra/roms/ python trial.py
 ```
+or simply (if you have setup the environment variable)
+```bash
+diambra run python trial.py
+```
+
 
 ## 🔗 Resources
 
