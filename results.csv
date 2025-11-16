@@ -1,0 +1,11 @@
+episode,reward,length,deterministic,seed,terminated,truncated
+0,-332.0,604,False,0,True,False
+1,-332.0,454,False,0,True,False
+2,-332.0,508,False,0,True,False
+3,-332.0,534,False,0,True,False
+4,-332.0,382,False,0,True,False
+5,-332.0,560,False,0,True,False
+6,-332.0,643,False,0,True,False
+7,-332.0,719,False,0,True,False
+8,-332.0,620,False,0,True,False
+9,-332.0,624,False,0,True,False
