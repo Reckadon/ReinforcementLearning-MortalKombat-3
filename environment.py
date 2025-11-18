@@ -7,7 +7,7 @@ from diambra.arena import SpaceTypes, Roles, EnvironmentSettings
 
 def load_trained_policy(checkpoint_path="checkpoints/latest_checkpoint.pth"):
     """
-    Load the trained A2C policy from checkpoint.
+    Load the trained ppo policy from checkpoint.
     
     Args:
         checkpoint_path (str): Path to the checkpoint file
@@ -16,7 +16,7 @@ def load_trained_policy(checkpoint_path="checkpoints/latest_checkpoint.pth"):
         tuple: (model, device, frame_stack) - loaded model, device, and frame stack
     """
     # Dynamic import to avoid circular import issues
-    import train_a2c
+    import train_ppo
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
@@ -36,7 +36,7 @@ def load_trained_policy(checkpoint_path="checkpoints/latest_checkpoint.pth"):
     num_features = 4  # character, health, aggressor_bar, timer
     stack_size = 4    # Frame stacking size
     
-    model = train_a2c.ActorCritic(
+    model = train_ppo.ProximalPolicyOpt(
         frame_shape=frame_shape,
         num_features=num_features,
         num_actions=num_actions,
@@ -48,7 +48,7 @@ def load_trained_policy(checkpoint_path="checkpoints/latest_checkpoint.pth"):
     model.eval()  # Set to evaluation mode
     
     # Initialize frame stack
-    frame_stack = train_a2c.FrameStack(stack_size)
+    frame_stack = train_ppo.FrameStack(stack_size)
     
     print(f"Loaded trained policy from {checkpoint_path}")
     print(f"Action space size: {num_actions}")
@@ -66,7 +66,7 @@ def make_env():
     settings.role = Roles.P1
     settings.continue_game = 0.0
     settings.show_final = False
-    settings.difficulty = 2      # 1..5 for UMK3 - pick what you want
+    settings.difficulty = 1      # 1..5 for UMK3 - pick what you want
     settings.characters = "Kitana"
     env = diambra.arena.make("umk3", settings, render_mode="human")
     return env
@@ -80,16 +80,18 @@ def run_episode(env, model=None, device=None, frame_stack=None):
     # Initialize frame stack for policy if using trained model
     if model is not None and frame_stack is not None:
         # Dynamic import to avoid circular import issues
-        import train_a2c
-        frame = train_a2c.preprocess_frame(obs["frame"]).to(device)
+        import train_ppo
+        frame = train_ppo.preprocess_frame(obs["frame"]).to(device)
         frame_stack.reset(frame)
-
+    else:
+        print("⚠️  No trained policy available.")   
+    
     while True:
         if model is not None and device is not None and frame_stack is not None:
             # Use trained policy
-            import train_a2c
-            frame = train_a2c.preprocess_frame(obs["frame"]).to(device)
-            features = train_a2c.extract_features(obs).to(device)
+            import train_ppo
+            frame = train_ppo.preprocess_frame(obs["frame"]).to(device)
+            features = train_ppo.extract_features(obs).to(device)
             
             stacked_frames = frame_stack.get_stacked().unsqueeze(0)  # (1, stack_size, H, W)
             features_batch = features.unsqueeze(0)  # (1, num_features)
@@ -128,7 +130,7 @@ def main():
     
     try:
         model, device, frame_stack = load_trained_policy()
-        print("🤖 Using trained A2C policy")
+        print("🤖 Using trained ppo policy")
     except FileNotFoundError as e:
         print(f"⚠️  Warning: {e}")
         print("🎲 Falling back to random actions")

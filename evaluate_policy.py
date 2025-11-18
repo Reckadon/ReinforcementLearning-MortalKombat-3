@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Policy Evaluation Script for A2C-trained Ultimate Mortal Kombat 3 Agent
+Policy Evaluation Script for ppo-trained Ultimate Mortal Kombat 3 Agent
 
-This script loads a trained A2C model checkpoint and evaluates it on the DIAMBRA UMK3 environment.
+This script loads a trained ppo model checkpoint and evaluates it on the DIAMBRA UMK3 environment.
 Supports deterministic and stochastic evaluation, video recording, and CSV result logging.
 
 Usage Examples:
@@ -26,18 +26,18 @@ import torch.nn as nn
 from collections import deque
 from environment import make_env
 
-# Try to import from train_a2c.py, provide fallbacks if not available
+# Try to import from train_ppo.py, provide fallbacks if not available
 try:
-    from train_a2c import ActorCritic, preprocess_frame, extract_features, FrameStack
+    from train_ppo import ProximalPolicyOpt, preprocess_frame, extract_features, FrameStack
     IMPORTED_COMPONENTS = True
-    print("Successfully imported components from train_a2c.py")
+    print("Successfully imported components from train_ppo.py")
 except ImportError as e:
-    print(f"Warning: Could not import from train_a2c.py: {e}")
+    print(f"Warning: Could not import from train_ppo.py: {e}")
     print("Using fallback implementations...")
     IMPORTED_COMPONENTS = False
 
 
-# Fallback implementations if train_a2c.py is not available
+# Fallback implementations if train_ppo.py is not available
 if not IMPORTED_COMPONENTS:
     def preprocess_frame(frame):
         """
@@ -49,6 +49,10 @@ if not IMPORTED_COMPONENTS:
         Returns:
             torch.Tensor: Grayscale frame of shape (1, H, W) in range [0,1]
         """
+        if frame is None:
+            raise ValueError("Input frame is None")
+            return None
+        
         gray = 0.299 * frame[:, :, 0] + 0.587 * frame[:, :, 1] + 0.114 * frame[:, :, 2]
         gray = gray.astype(np.float32) / 255.0
         gray_tensor = torch.from_numpy(gray).unsqueeze(0)  # (1, H, W)
@@ -92,11 +96,11 @@ if not IMPORTED_COMPONENTS:
         def get_stacked(self):
             return torch.cat(list(self.frames), dim=0)
 
-    class ActorCritic(nn.Module):
+    class ProximalPolicyOpt(nn.Module):
         """Fallback: Simplified Actor-Critic network."""
         
         def __init__(self, frame_shape, num_features, num_actions, stack_size=4):
-            super(ActorCritic, self).__init__()
+            super(ProximalPolicyOpt, self).__init__()
             
             self.frame_shape = frame_shape
             self.num_features = num_features
@@ -201,7 +205,7 @@ def load_model(checkpoint_path, device):
         frame_shape = obs["frame"].shape[:2]  # (H, W)
         env.close()
         
-        model = ActorCritic(
+        model = ProximalPolicyOpt(
             frame_shape=frame_shape,
             num_features=num_features,
             num_actions=num_actions,
@@ -268,7 +272,7 @@ def run_episode(env, model, device, deterministic=False, stack_size=4, max_steps
     
     Args:
         env: DIAMBRA environment
-        model: Trained ActorCritic model
+        model: Trained ProximalPolicyOpt model
         device: PyTorch device
         deterministic (bool): Whether to use deterministic policy
         stack_size (int): Number of frames to stack
@@ -342,7 +346,7 @@ def run_episode(env, model, device, deterministic=False, stack_size=4, max_steps
 def main():
     """Main evaluation function."""
     parser = argparse.ArgumentParser(
-        description="Evaluate trained A2C policy on UMK3",
+        description="Evaluate trained ppo policy on UMK3",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__
     )
@@ -356,7 +360,7 @@ def main():
     parser.add_argument("--save-video", help="Directory to save episode videos as PNG frames")
     parser.add_argument("--save-csv", help="Path to save results as CSV")
     parser.add_argument("--device", help="Device to use (cpu/cuda, default: auto)")
-    parser.add_argument("--max-steps-per-ep", type=int, help="Maximum steps per episode")
+    parser.add_argument("--max-steps-per-ep", type=int,help="Maximum steps per episode")
     
     args = parser.parse_args()
     
@@ -384,8 +388,8 @@ def main():
         env_name = 'UMK3'
         if hasattr(env, 'spec') and env.spec is not None:
             env_name = env.spec.id
-        print(f"Environment created: {env_name}")
-        print(f"Action space: {env.action_space}")
+        # print(f"Environment created: {env_name}")
+        # print(f"Action space: {env.action_space}")
         
         # Run evaluation episodes
         episode_rewards = []

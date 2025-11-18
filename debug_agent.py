@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Debug script to check training issues with A2C agent
+Debug script to check training issues with ppo agent
 """
 
 import torch
 from environment import make_env
-from train_a2c import preprocess_frame, extract_features, FrameStack, ActorCritic
+from train_ppo import preprocess_frame, extract_features, FrameStack, ProximalPolicyOpt
 import numpy as np
 
 def debug_agent():
@@ -62,7 +62,7 @@ def debug_agent():
     frame_shape = obs["frame"].shape[:2]
     num_actions = env.action_space.n
     
-    model = ActorCritic(
+    model = ProximalPolicyOpt(
         frame_shape=frame_shape,
         num_features=4,
         num_actions=num_actions,

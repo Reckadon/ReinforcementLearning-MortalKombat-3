@@ -1,6 +1,6 @@
-# A2C Agent for Ultimate Mortal Kombat 3
+# ppo Agent for Ultimate Mortal Kombat 3
 
-This branch contains an Advantage Actor-Critic (A2C) reinforcement learning implementation for playing Ultimate Mortal Kombat 3 using the DIAMBRA Arena environment.
+This branch contains an Advantage Actor-Critic (ppo) reinforcement learning implementation for playing Ultimate Mortal Kombat 3 using the DIAMBRA Arena environment.
 
 ## Architecture Overview
 
@@ -19,7 +19,7 @@ This branch contains an Advantage Actor-Critic (A2C) reinforcement learning impl
 ## File Structure
 
 ### Core Training Files
-- `train_a2c.py` - Main A2C training script with complete implementation
+- `train_ppo.py` - Main ppo training script with complete implementation
 - `environment.py` - DIAMBRA environment setup and configuration
 - `evaluate_policy.py` - Policy evaluation script with deterministic/stochastic modes
 
@@ -68,7 +68,7 @@ Extracts and normalizes key game state variables:
 
 ### Training
 ```bash
-python train_a2c.py
+python train_ppo.py
 ```
 
 ### Evaluation
@@ -118,7 +118,7 @@ python add_noise.py
 
 ## Implementation Details
 
-The A2C implementation uses:
+The ppo implementation uses:
 - Synchronous advantage actor-critic algorithm
 - Combined loss function (policy loss + value loss + entropy bonus)
 - Adam optimizer with gradient clipping
