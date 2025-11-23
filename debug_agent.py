@@ -37,6 +37,10 @@ def debug_agent():
     print(f"Initial obs keys: {obs.keys()}")
     print(f"P1 health: {obs['P1']['health']}")
     print(f"P2 health: {obs['P2']['health']}")
+
+    # print("==="*50)
+    # print(obs , info)
+    # print("==="*50)
     
     total_reward = 0
     for i in range(100):

@@ -1,0 +1,54 @@
+folders:
+  parent_dir: "./results/"
+  model_name: "umk3_skorpion"
+
+settings:
+  game_id: "umk3"
+  step_ratio: 6
+  frame_shape:  [84, 84, 1]
+  continue_game: 0.0
+  action_space: "discrete"                  # string → converted to enum
+  characters: "Skorpion"                    # correct UMK3 spelling
+  outfits: 1
+  difficulty: 2
+  tower: 3
+
+wrappers_settings:
+  normalize_reward: true
+  no_attack_buttons_combinations: true
+  stack_frames: 4
+  add_last_action: true                     # adds "action" key (last action index)
+  stack_actions: 12
+  scale: false                              # ← FIXES THE numpy.int64 ERROR
+  exclude_image_scaling: true
+  role_relative: true
+  flatten: true
+  filter_keys:
+    - "frame"
+    - "action"                              # from add_last_action
+    - "own_health"
+    - "opp_health"
+    - "own_side"
+    - "opp_side"
+    - "own_wins"
+    - "opp_wins"
+    - "own_character"
+    - "opp_character"
+    - "stage"
+    - "timer"
+    - "own_aggressor_bar"
+    - "opp_aggressor_bar"
+
+policy_kwargs:
+  net_arch: [256, 256]
+
+ppo_settings:
+  gamma: 0.99
+  learning_rate: [7e-4, 1e-5]
+  clip_range: [0.2, 0.1]
+  batch_size: 256
+  n_epochs: 4
+  n_steps: 2048
+  autosave_freq: 50000
+  time_steps: 2000000
+  model_checkpoint: "0"

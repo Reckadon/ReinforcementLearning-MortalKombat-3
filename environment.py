@@ -5,7 +5,7 @@ import torch
 import diambra.arena
 from diambra.arena import SpaceTypes, Roles, EnvironmentSettings
 
-def load_trained_policy(checkpoint_path="checkpoints/latest_checkpoint.pth"):
+def load_trained_policy():
     """
     Load the trained ppo policy from checkpoint.
     
@@ -19,6 +19,9 @@ def load_trained_policy(checkpoint_path="checkpoints/latest_checkpoint.pth"):
     import train_ppo
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # load latest checkpoint in checkpoints directory , saved as checkpoint_episode_{}.pth
+    checkpoint_path = "checkpoints/checkpoint_episode_560.pth"
     
     if not os.path.exists(checkpoint_path):
         raise FileNotFoundError(f"Checkpoint not found at {checkpoint_path}")
@@ -58,8 +61,9 @@ def load_trained_policy(checkpoint_path="checkpoints/latest_checkpoint.pth"):
 
 def make_env():
     settings = EnvironmentSettings()
-    settings.step_ratio = 4
+    settings.step_ratio = 6
     settings.frame_shape = (128, 128, 0)   # resized RGB frames
+    # settings.frame_shape = (254, 400 , 0)    # resized grayscale frames
     # settings.frame_shape = (0, 0, 1)    # grayscale original size (example)
     # settings.frame_shape = (0, 0, 0)    # deactivated (original RGB)
     settings.action_space = SpaceTypes.DISCRETE     # or SpaceTypes.MULTI_DISCRETE
@@ -67,8 +71,10 @@ def make_env():
     settings.continue_game = 0.0
     settings.show_final = False
     settings.difficulty = 1      # 1..5 for UMK3 - pick what you want
-    settings.characters = "Kitana"
-    env = diambra.arena.make("umk3", settings, render_mode="human")
+    # settings.characters = "Kitana"
+    settings.characters = ("Kitana", "Kano")
+    # env = diambra.arena.make("umk3", settings, render_mode="human")
+    env = diambra.arena.make("umk3", settings)
     return env
 
 def run_episode(env, model=None, device=None, frame_stack=None):
@@ -111,6 +117,8 @@ def run_episode(env, model=None, device=None, frame_stack=None):
         # print("Action (policy):", action)
 
         obs, reward, terminated, truncated, info = env.step(action)
+        # time.sleep(0.05)
+
         total_reward += float(reward)
         steps += 1
 

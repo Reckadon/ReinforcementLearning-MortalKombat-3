@@ -1,129 +1,158 @@
-# ppo Agent for Ultimate Mortal Kombat 3
+# Mortal Kombat 3 — PPO Training with DIAMBRA Arena
 
-This branch contains an Advantage Actor-Critic (ppo) reinforcement learning implementation for playing Ultimate Mortal Kombat 3 using the DIAMBRA Arena environment.
+- **Project:** PPO training for Ultimate Mortal Kombat 3 using PyTorch and the DIAMBRA Arena environment.
+- **Main scripts:** `train_ppo.py`, `environment.py`, `evaluate_policy.py`.
 
-## Architecture Overview
+## Table of Contents
+- [Mortal Kombat 3 — PPO Training with DIAMBRA Arena](#mortal-kombat-3--ppo-training-with-diambra-arena)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [PPO Algorithm](#ppo-algorithm)
+  - [Architecture](#architecture)
+  - [Key Files](#key-files)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+  - [Quick Start](#quick-start)
+  - [Training](#training)
+  - [Evaluation](#evaluation)
+  - [Checkpoints \& Logging](#checkpoints--logging)
+  - [Images \& Visualizations](#images--visualizations)
+  - [Action Mapping \& Custom Rewards](#action-mapping--custom-rewards)
+  - [Configuration Tips](#configuration-tips)
 
-### Neural Network Architecture
-- **Dual-Input Design**: Combines visual frame data with game state features
-- **CNN Encoder**: Processes stacked grayscale frames using 3-layer convolutional network
-- **MLP Encoder**: Handles normalized game state features (character, health, aggressor bar, timer)
-- **Actor-Critic Head**: Shared representation feeding into policy (actor) and value function (critic) outputs
+## Overview
+- **Purpose:** Train a PPO agent to play Ultimate Mortal Kombat 3 (UMK3) via the DIAMBRA Arena interface.
+- **Frame preprocessing & stacking:** Frames are converted to grayscale, normalized, and stacked (default `stack_size=4`). The environment uses resized frames `(128, 128)` by default.
 
-### Key Features
-- **Frame Preprocessing**: RGB frames converted to grayscale and normalized
-- **Frame Stacking**: Uses 4-frame history for temporal information
-- **Feature Extraction**: Normalizes game state variables to [0,1] range
-- **Temperature Scaling**: Prevents overconfident action predictions
+## PPO Algorithm
+Proximal Policy Optimization (PPO) is a policy gradient method for reinforcement learning that improves upon earlier algorithms like TRPO by using a clipped surrogate objective to ensure stable updates. It balances exploration and exploitation by constraining policy updates within a trust region.
 
-## File Structure
+Key components in this implementation:
+- **Actor-Critic Architecture:** The model consists of an actor (policy) head for action selection and a critic (value) head for estimating state values.
+- **Clipped Surrogate Objective:** Updates are clipped to prevent large policy changes, promoting stability.
+- **Generalized Advantage Estimation (GAE):** Used for computing advantages to reduce variance in policy gradients.
+- **Multi-Epoch Updates:** The collected rollout data is used for multiple optimization epochs with minibatch updates.
+- **Entropy Regularization:** Added to encourage exploration by penalizing overly deterministic policies.
 
-### Core Training Files
-- `train_ppo.py` - Main ppo training script with complete implementation
-- `environment.py` - DIAMBRA environment setup and configuration
-- `evaluate_policy.py` - Policy evaluation script with deterministic/stochastic modes
+The training loop collects rollouts, computes returns and advantages, and performs PPO updates using the clipped objective.
 
-### Utility Scripts
-- `debug_agent.py` - Debugging script for analyzing model weights and training issues
-- `add_noise.py` - Adds Gaussian noise to model weights to escape local minima
+## Architecture
+- **CNN Encoder:** Processes stacked grayscale frames (default 4 frames) to extract visual features.
+- **MLP Encoder:** Handles RAM-like features (character ID, health, aggressor bar, timer), normalized to [0,1].
+- **Shared Layers:** Combines CNN and MLP outputs into a unified representation.
+- **Actor Head:** Outputs action logits for the discrete action space.
+- **Critic Head:** Estimates the value function for advantage computation.
 
-### Training Outputs
-- `checkpoints/` - Model checkpoints and training state
-- `runs/` - TensorBoard logging data
-- `results.csv` - Evaluation results storage
+## Key Files
+- `train_ppo.py`: Training loop, model definition (`ProximalPolicyOpt`), frame stacking, rollout collection, PPO update, logging (TensorBoard), checkpointing.
+- `environment.py`: DIAMBRA environment creation (`make_env()`), utilities to load a trained policy (`load_trained_policy()`), and an interactive `run_episode()` helper.
+- `evaluate_policy.py`: Evaluation utilities — run to compute evaluation metrics; see file for usage details.
 
-## Input Processing
+## Requirements
+- Python 3.8+ recommended.
+- PyTorch (GPU recommended if available).
+- DIAMBRA Arena (separate installation; may require Docker/container setup) — see DIAMBRA docs.
+- Common Python packages: `numpy`, `torch`, `diambra`, `tensorboard`, `opencv-python` (if needed for image handling).
 
-### Frame Processing
-- Converts 128x128x3 RGB frames to grayscale using standard luminance weights
-- Normalizes pixel values to [0,1] range
-- Stacks 4 consecutive frames for temporal context
-- Input shape: (batch_size, 4, 128, 128)
+## Installation
+Suggested minimal install (example):
 
-### Feature Processing
-Extracts and normalizes key game state variables:
-- **Character**: Player character (normalized by max 25 characters)
-- **Health**: Player health (0-166, normalized to [0,1])
-- **Aggressor Bar**: Special meter (0-48, normalized to [0,1])
-- **Timer**: Round timer (0-100, normalized to [0,1])
+```powershell
+python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+python -m pip install numpy tensorboard diambra-arena opencv-python
+```
 
-## Training Configuration
+**Notes:**
+- DIAMBRA installation is environment-specific. Follow DIAMBRA Arena's installation instructions (Docker or native) before running the code.
 
-### Hyperparameters
-- **Learning Rate**: 1e-4 (reduced for stability)
-- **Discount Factor**: 0.99
-- **Entropy Coefficient**: 0.1 (increased for exploration)
-- **Value Loss Coefficient**: 0.5
-- **Rollout Steps**: 128
-- **Max Gradient Norm**: 0.5
+## Quick Start
+1. Ensure DIAMBRA Arena is installed and configured.
+2. Open `train_ppo.py` to review/modify the training config.
+3. Run training: `python train_ppo.py`
+4. View logs: `tensorboard --logdir runs/ppo_umk3_v7 --bind_all`
+5. Evaluate: `python environment.py`
 
-### Training Process
-1. Collects 128-step rollouts using current policy
-2. Computes advantages using Generalized Advantage Estimation (GAE)
-3. Updates actor-critic network using policy gradient and value function loss
-4. Logs training metrics to TensorBoard
-5. Periodically evaluates policy and saves checkpoints
+## Training
+- Default training command (PowerShell):
 
-## Usage
-
-### Training
-```bash
+```powershell
 python train_ppo.py
 ```
 
-### Evaluation
-```bash
-# Basic evaluation
-python evaluate_policy.py --checkpoint checkpoints/latest_checkpoint.pth --n-episodes 20
+- Default important config values (from `train_ppo.py`):
+  - `stack_size`: 4
+  - `learning_rate`: 2e-4
+  - `n_steps`: 128
+  - `gamma`: 0.99
+  - `entropy_coef`: 0.1
+  - `save_dir`: `checkpoints_v7`
+  - `log_dir`: `runs/ppo_umk3_v7`
 
-# Deterministic evaluation with video recording
-python evaluate_policy.py --checkpoint checkpoints/latest_checkpoint.pth --n-episodes 5 --deterministic --save-video ./videos
+## Evaluation
+- `environment.py` contains `make_env()` and `run_episode()` helpers. It loads a trained policy from `checkpoints/checkpoint_episode_560.pth` by default — update the path if needed.
+- To run an interactive episode (uses trained policy if available, otherwise random actions):
 
-# Save results to CSV
-python evaluate_policy.py --checkpoint checkpoints/latest_checkpoint.pth --n-episodes 10 --save-csv results.csv
+```powershell
+python environment.py
 ```
 
-### Debugging
-```bash
-# Analyze model weights and test environment
-python debug_agent.py
+- Use `evaluate_policy.py` for deterministic evaluations and metrics.
 
-# Add noise to escape local minimum
-python add_noise.py
+## Checkpoints & Logging
+- Checkpoints are saved as `checkpoint_episode_{episode}.pth` in the configured `save_dir` (default `checkpoints_v7`).
+- The trainer loads the latest checkpoint on start if available.
+- TensorBoard logs are written to the configured `log_dir` (default `runs/ppo_umk3_v7`). To view logs:
+
+```powershell
+tensorboard --logdir runs/ppo_umk3_v7 --bind_all
 ```
 
-## Environment Configuration
+## Images & Visualizations
+Below are visualizations from training and evaluation:
 
-- **Game**: Ultimate Mortal Kombat 3 (umk3)
-- **Frame Shape**: 128x128 RGB (converted to grayscale)
-- **Action Space**: Discrete (14 possible actions)
-- **Step Ratio**: 4 (action repeated for 4 game frames)
-- **Character**: Kitana (fixed for consistency)
-- **Difficulty**: Level 2
-- **Role**: Player 1
+![Rewards vs Episodes for Model 1](data/image.png)
 
-## Training Features
+![Rewards vs Episodes for Model 2 : Updated Rollout ](data/image2.png)
 
-### Monitoring
-- Real-time TensorBoard logging for losses and rewards
-- Periodic policy evaluation episodes
-- Model checkpointing every 100 episodes
-- Training progress tracking with episode and step counters
+![Rewards vs Episodes for Model 3 : Local Minima ](data/image3.png)
 
-### Stability Features
-- Gradient clipping to prevent exploding gradients
-- Temperature scaling for action distribution
-- Proper reward normalization
-- Graceful keyboard interrupt handling
+*Note: Replace with actual image paths if needed. Use `pngs_to_video.py` to generate videos from frames.*
 
-## Implementation Details
 
-The ppo implementation uses:
-- Synchronous advantage actor-critic algorithm
-- Combined loss function (policy loss + value loss + entropy bonus)
-- Adam optimizer with gradient clipping
-- Frame stacking using efficient deque data structure
-- Proper environment handling with DIAMBRA Arena integration
+Added videos showing gameplay of trained agents at different training stages.
 
-This implementation is designed for research and experimentation with reinforcement learning in fighting game environments.
+## Action Mapping & Custom Rewards
+- The action space is discrete. `train_ppo.py` contains an explanatory comment listing action IDs (No-Op, Left, Up, Right, High Punch, High Kick, Low Kick, Low Punch, Run, Block, etc.). Review the inline comment in `train_ppo.py` for the exact mapping.
+- The training script applies custom reward shaping (amplifying positive rewards and adding a bonus for attack actions). Inspect the `rollout()` function in `train_ppo.py` to modify.
+
+Updated rollout with custom reward shaping to encourage aggressive playstyle and faster wins.
+
+```python
+movement_ids = [0,1,2,3,4,5,6,7,8,13,14]
+attack_ids = [9,10,11,12]
+
+# # # if action chosen and no damage dealt, penalize small amount
+# if action.cpu().item() in attack_ids and reward == 0:
+#     reward -= 1.2  # small penalty for ineffective attack
+
+# # give more importance to damage dealt
+if reward > 0:
+    reward *= 2.0  # amplify positive rewards
+
+# # # # add custom reward for
+if action.cpu().item() in attack_ids:
+    reward += 2.8
+
+# if action.cpu().item() in movement_ids:
+#     reward += 0.5  # small reward for movement actions
+```
+
+## Configuration Tips
+- To change frame resolution or step ratio, modify `environment.py`'s `EnvironmentSettings()` (e.g., `settings.frame_shape`, `settings.step_ratio`).
+- To change training hyperparameters (learning rate, gamma, batch sizes, etc.) edit the `config` dict in `train_ppo.py`.
+- If you want to use a different checkpoint folder, update `config['save_dir']` in `train_ppo.py` and the checkpoint path in `environment.py`.
+
+
+
+
 

@@ -6,6 +6,17 @@ __pycache__/
 # C extensions
 *.so
 
+videos/
+checkpoints/
+checkpoints_v6/
+checkpoints_v7/
+runs/
+results/
+config.yaml/
+episodes_2/
+
+
+
 # Distribution / packaging
 .Python
 build/

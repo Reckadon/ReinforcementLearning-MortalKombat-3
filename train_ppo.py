@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ppo (Advantage Actor-Critic) Training Script for Ultimate Mortal Kombat 3
+ppo  Training Script for Ultimate Mortal Kombat 3
 Using PyTorch and DIAMBRA Arena Environment
 
 This script implements synchronous ppo with:
@@ -252,9 +252,18 @@ def compute_returns_and_advantages(rewards, values, next_value, dones, gamma=0.9
     
     # Compute returns
     R = next_value
+    # print("+"*50)
+    
+
+    # print("+"*50)
+    # print("dones:", dones)
+    # print("+"*50)
+
     for i in reversed(range(len(rewards))):
-        R = rewards[i] + gamma * R * (1 - dones[i])
+        R = rewards[i] + gamma*R*(1 - dones[i])
         returns.insert(0, R)
+
+    print("rewards:",rewards,"\n",R,"\n")
     
     # Compute advantages
     returns_tensor = torch.tensor(returns, dtype=torch.float32)
@@ -284,6 +293,28 @@ class ppoTrainer:
         # Get environment information
         obs, _ = self.env.reset()
         frame_shape = obs["frame"].shape[:2]  # (H, W)
+
+        # print("Environment action space:","="*50)
+        # print(self.env.action_space)
+        # print("Actions:", self.env.unwrapped)
+        '''
+        0:  No-Move (No-Op)
+        1:  Left
+        2:  Left+Up
+        3:  Up
+        4:  Up+Right
+        5:  Right
+        6:  Right+Down
+        7:  Down
+        8:  Down+Left
+        9:  High Punch
+        10: High Kick
+        11: Low Kick
+        12: Low Punch
+        13: Run
+        14: Block
+        '''
+
         num_actions = self.env.action_space.n
         num_features = 4  # character, health, aggressor_bar, timer
         
@@ -311,6 +342,7 @@ class ppoTrainer:
         # Training state
         self.episode_count = 0
         self.step_count = 0
+
         
         # Load checkpoint if available
         self.load_checkpoint(from_latest=True)
@@ -418,7 +450,30 @@ class ppoTrainer:
 
             # Step environment
             obs, reward, terminated, truncated, _ = self.env.step(action.cpu().item())
+            # print("Environemnt step result:","="*50)  # Log step result
+            # print(self.env.step(0))
+
             done = terminated or truncated
+
+            movement_ids = [0,1,2,3,4,5,6,7,8,13,14]
+            attack_ids = [9,10,11,12]
+
+            # # # if action choosen and no damage dealt, penalize small amount
+            # if action.cpu().item() in attack_ids and reward == 0:
+            #     reward -= 1.2  # small penalty for ineffective attack
+
+            # # give more importance to damage dealt
+            if reward > 0:
+                reward *= 2.0  # amplify positive rewards
+
+            # # # # add custom reward for 
+            if action.cpu().item() in attack_ids:
+                reward += 2.8
+
+            # if action.cpu().item() in movement_ids:
+            #     reward += 0.5  # small reward for movement actions
+
+            # print(f"Reward: {reward}")  # Log reward
 
             rewards.append(reward)
             dones.append(done)
@@ -651,22 +706,22 @@ def main():
         "stack_size": 4,
         
         # Model
-        "learning_rate": 1e-4,  # Reduced from 3e-4 for more stable learning
+        "learning_rate": 2e-4,  # Reduced from 3e-4 for more stable learning
         "gamma": 0.99,
         "value_loss_coef": 0.5,
         "entropy_coef": 0.1,  # Increased from 0.01 to maintain exploration
-        "max_grad_norm": 0.5,
+        "max_grad_norm": 0.5,   
         
         # Training
-        "n_steps": 256,
-        "max_episodes": 100000,
+        "n_steps": 128 ,# Increased from 1,280 for better data efficiency
+        "max_episodes": 50_000_000,
         
         # Logging and saving
         "log_interval": 10,
-        "eval_interval": 20,
-        "save_interval": 100,  # episodes
-        "log_dir": "runs/ppo_umk3",
-        "save_dir": "checkpoints"
+        "eval_interval": 10,
+        "save_interval": 500,  # episodes
+        "log_dir": "runs/ppo_umk3_v7",
+        "save_dir": "checkpoints_v7"
     }
     
     # Create trainer and start training
