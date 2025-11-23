@@ -27,6 +27,8 @@ mkdir -p /home/[USERNAME]/.diambra/roms/
 ```
 > You can use any other directory on your system as well, but then you need to set a system environment variable `DIAMBRAROMSPATH=/absolute/path/to/roms/folder/`
 
+tip : For ROMs , fint the game on diambra docs and check for search keywords and feed them to Gr0k , verify SHA  ~ worked for mortal kombat 3  :)
+
 Copy your UMK3 ROM file to the directory:
 
 ```bash
@@ -64,6 +66,7 @@ or simply (if you have setup the environment variable)
 ```bash
 diambra run python trial.py
 ```
+
 
 
 ## 🔗 Resources
