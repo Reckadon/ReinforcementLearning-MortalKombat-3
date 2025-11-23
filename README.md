@@ -3,6 +3,8 @@
 - **Project:** PPO training for Ultimate Mortal Kombat 3 using PyTorch and the DIAMBRA Arena environment.
 - **Main scripts:** `train_ppo.py`, `environment.py`, `evaluate_policy.py`.
 
+Check video 2 and video 3 in the `videos/` folder for gameplay footage of trained agents at different training stages. Our model is the blue character.
+
 ## Table of Contents
 - [Mortal Kombat 3 — PPO Training with DIAMBRA Arena](#mortal-kombat-3--ppo-training-with-diambra-arena)
   - [Table of Contents](#table-of-contents)
@@ -110,20 +112,10 @@ tensorboard --logdir runs/ppo_umk3_v7 --bind_all
 ## Images & Visualizations
 Below are visualizations from training and evaluation:
 
+Inbuilt Diambra Reward Mechanism Model 
 ![Rewards vs Episodes for Model 1](data/image.png)
 
-![Rewards vs Episodes for Model 2 : Updated Rollout ](data/image2.png)
-
-![Rewards vs Episodes for Model 3 : Local Minima ](data/image3.png)
-
-*Note: Replace with actual image paths if needed. Use `pngs_to_video.py` to generate videos from frames.*
-
-
-Added videos showing gameplay of trained agents at different training stages.
-
-## Action Mapping & Custom Rewards
-- The action space is discrete. `train_ppo.py` contains an explanatory comment listing action IDs (No-Op, Left, Up, Right, High Punch, High Kick, Low Kick, Low Punch, Run, Block, etc.). Review the inline comment in `train_ppo.py` for the exact mapping.
-- The training script applies custom reward shaping (amplifying positive rewards and adding a bonus for attack actions). Inspect the `rollout()` function in `train_ppo.py` to modify.
+Reward Shaping Model - Updated Rollout
 
 Updated rollout with custom reward shaping to encourage aggressive playstyle and faster wins.
 
@@ -146,6 +138,22 @@ if action.cpu().item() in attack_ids:
 # if action.cpu().item() in movement_ids:
 #     reward += 0.5  # small reward for movement actions
 ```
+![Rewards vs Episodes for Model 2 : Updated Rollout ](data/image2.png)
+
+
+
+Model stuck in local minima - needs further tuning 
+![Rewards vs Episodes for Model 3 : Local Minima ](data/image3.png)
+
+*Note: Replace with actual image paths if needed. Use `pngs_to_video.py` to generate videos from frames.*
+
+
+Added videos showing gameplay of trained agents at different training stages.
+
+## Action Mapping & Custom Rewards
+- The action space is discrete. `train_ppo.py` contains an explanatory comment listing action IDs (No-Op, Left, Up, Right, High Punch, High Kick, Low Kick, Low Punch, Run, Block, etc.). Review the inline comment in `train_ppo.py` for the exact mapping.
+- The training script applies custom reward shaping (amplifying positive rewards and adding a bonus for attack actions). Inspect the `rollout()` function in `train_ppo.py` to modify.
+
 
 ## Configuration Tips
 - To change frame resolution or step ratio, modify `environment.py`'s `EnvironmentSettings()` (e.g., `settings.frame_shape`, `settings.step_ratio`).

@@ -222,3 +222,5 @@ videos/*.png
 runs/*
 results/*
 checkpoints/*
+
+runs/*
