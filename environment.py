@@ -66,7 +66,7 @@ def make_env():
     settings.role = Roles.P1
     settings.continue_game = 0.0
     settings.show_final = False
-    settings.difficulty = 2      # 1..5 for UMK3 - pick what you want
+    settings.difficulty = 1      # 1..5 for UMK3 - pick what you want
     settings.characters = "Kitana"
     env = diambra.arena.make("umk3", settings, render_mode="human")
     return env

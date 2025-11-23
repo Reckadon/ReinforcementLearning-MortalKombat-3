@@ -16,6 +16,84 @@ This branch contains an Advantage Actor-Critic (A2C) reinforcement learning impl
 - **Feature Extraction**: Normalizes game state variables to [0,1] range
 - **Temperature Scaling**: Prevents overconfident action predictions
 
+## A2C Algorithm Description
+
+### Overview
+Advantage Actor-Critic (A2C) is a synchronous policy gradient algorithm that combines the benefits of both policy-based and value-based reinforcement learning methods. It belongs to the actor-critic family of algorithms and serves as a simplified, synchronous version of the A3C (Asynchronous Advantage Actor-Critic) algorithm.
+
+### Core Components
+
+#### Actor Network
+- **Purpose**: Learns the policy π(a|s) - the probability distribution over actions given a state
+- **Output**: Action probabilities for the discrete action space (14 actions in UMK3)
+- **Loss Function**: Policy gradient loss weighted by advantages
+- **Formula**: `L_policy = -log(π(a|s)) * A(s,a)`
+
+#### Critic Network
+- **Purpose**: Estimates the value function V(s) - expected return from state s
+- **Output**: Scalar value representing state value
+- **Loss Function**: Mean squared error between predicted and target values
+- **Formula**: `L_value = MSE(V(s), R + γ*V(s'))`
+
+#### Advantage Estimation
+- **Purpose**: Reduces variance in policy gradient estimates
+- **Calculation**: `A(s,a) = R - V(s)` where R is the discounted return
+- **Benefit**: Tells us how much better an action is compared to the expected value in that state
+
+### Training Process
+
+1. **Rollout Collection**: Agent interacts with environment for n steps (128 steps), collecting states, actions, rewards, and next states
+
+2. **Return Calculation**: 
+   - Compute discounted returns: `R_t = r_t + γ*r_{t+1} + γ²*r_{t+2} + ...`
+   - Bootstrap with final state value if episode doesn't terminate
+
+3. **Advantage Calculation**: 
+   - Simple advantage estimation: `A_t = R_t - V(s_t)`
+   - Normalize advantages to reduce variance
+
+4. **Policy Update**: 
+   - Update actor network using policy gradient with advantage weighting
+   - Encourages actions that led to better-than-expected outcomes
+
+5. **Value Update**:
+   - Update critic network to better predict state values
+   - Uses computed returns as targets
+
+6. **Entropy Regularization**:
+   - Adds entropy term to encourage exploration
+   - Prevents premature convergence to deterministic policies
+
+### Mathematical Formulation
+
+The total loss function combines three components:
+```
+L_total = L_policy + c1 * L_value - c2 * H(π)
+```
+
+Where:
+- `L_policy = -∑ log(π(a_t|s_t)) * A_t` (policy loss)
+- `L_value = ∑ (V(s_t) - R_t)²` (value loss)
+- `H(π) = -∑ π(a|s) * log(π(a|s))` (entropy)
+- `c1, c2` are weighting coefficients
+
+### Advantages of A2C
+
+1. **Reduced Variance**: Advantage estimation reduces variance compared to vanilla policy gradients
+2. **Sample Efficiency**: Value function helps with more efficient learning
+3. **Stability**: Synchronous updates provide more stable training than asynchronous methods
+4. **Exploration**: Entropy regularization maintains exploration throughout training
+5. **Generality**: Works well across various environments and action spaces
+
+### Implementation Details in This Project
+
+- **Synchronous Training**: Single environment, sequential rollout collection
+- **Simple Advantage**: Uses `A = R - V(s)` (returns minus value estimates)
+- **Shared Network**: Actor and critic share lower layers, reducing parameters
+- **Gradient Clipping**: Prevents exploding gradients with max norm of 0.5
+- **Temperature Scaling**: Applies temperature (1.0) to action logits for controlled exploration
+- **Advantage Normalization**: Normalizes advantages to zero mean and unit variance
+
 ## File Structure
 
 ### Core Training Files
@@ -56,6 +134,7 @@ Extracts and normalizes key game state variables:
 - **Value Loss Coefficient**: 0.5
 - **Rollout Steps**: 128
 - **Max Gradient Norm**: 0.5
+- **Frame Stack Size**: 4
 
 ### Training Process
 1. Collects 128-step rollouts using current policy
@@ -127,3 +206,5 @@ The A2C implementation uses:
 
 This implementation is designed for research and experimentation with reinforcement learning in fighting game environments.
 
+## Visualisation
+![alt text](rewards.png)
