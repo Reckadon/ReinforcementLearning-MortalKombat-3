@@ -57,17 +57,7 @@ On first run, you'll need to register for a DIAMBRA account:
 
 ## 🎮 Usage
 
-Run the RL training script:
-
-```bash
-diambra run -r /home/[USERNAME]/.diambra/roms/ python trial.py
-```
-or simply (if you have setup the environment variable)
-```bash
-diambra run python trial.py
-```
-
-Implemented A2C and PPO , you can find the code in the respective branches.
+See the specific branches for [PPO](https://github.com/Reckadon/ReinforcementLearning-MortalKombat-3/tree/ppo), [DQN](https://github.com/Reckadon/ReinforcementLearning-MortalKombat-3/tree/dqm) and [Actor-Critic](https://github.com/Reckadon/ReinforcementLearning-MortalKombat-3/tree/a2c) respectively for their usages and documentation.
 
 
 ## 🔗 Resources
